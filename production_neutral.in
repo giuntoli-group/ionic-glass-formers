@@ -1,0 +1,52 @@
+# LAMMPS script for the production run of compleximers for charge density = 0  at T = 0.8
+
+units           lj
+atom_style      full
+dimension       3
+boundary        p p p
+timestep        0.005
+neigh_modify    one 5000 every 1
+package         omp 2
+
+
+read_data       relaxed.data
+
+
+
+
+bond_style      fene
+bond_coeff      * 30.0 1.5 1.0 1.0
+special_bonds   lj 0.0 1.0 1.0
+
+pair_style      lj/cut/omp 2.5
+pair_coeff      * * 1.0 1.0
+
+
+variable        runtime equal 6000000
+variable        Temp equal 0.8
+variable        Press equal 0.1
+variable        velSeed equal 926458
+
+velocity        all create ${Temp} ${velSeed}
+fix             noDrift all momentum 10 linear 1 1 1
+
+thermo_style    custom step temp vol density press pe ke ecoul spcpu
+thermo          100
+
+fix             npt all npt temp ${Temp} ${Temp} 0.5 iso ${Press} ${Press} 5.0
+
+
+# input a file containing the timesteps where
+# the trajectory should be written
+variable        f file ${timesteps_file}
+variable        step2 equal next(f)
+dump            dumpBatch_full all custom 1 lmp_batch/traj_*.lammpstrj id type xu yu zu vx vy vz
+dump_modify     dumpBatch_full every v_step2 first yes
+dump_modify     dumpBatch_full sort id
+
+run             ${runtime}
+
+unfix           npt
+
+write_data      final_${T}.data nofix nocoeff
+

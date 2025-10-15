@@ -1,0 +1,45 @@
+# LAMMPS script for the relaxation of compleximers for charge density = 0  at T = 0.8
+
+units           lj
+atom_style      full
+dimension       3
+boundary        p p p
+timestep        0.005
+neigh_modify    one 5000 every 1
+package         omp 2
+#kspace_style    pppm 1.0e-4
+
+read_data       after_relax.data
+
+#set             type 2 charge 1.0
+#set             type 3 charge -1.0
+
+bond_style      fene
+bond_coeff      * 30.0 1.5 1.0 1.0
+special_bonds   lj 0.0 1.0 1.0
+
+pair_style      lj/cut/omp 2.5
+pair_coeff      * * 1.0 1.0
+#dielectric      ${dielectric}
+
+variable        runtime equal 30000000
+variable        Temp equal 0.8
+variable        Press equal 0.1
+variable        velSeed equal 926458
+
+velocity        all create ${Temp} ${velSeed}
+fix             noDrift all momentum 10 linear 1 1 1
+
+thermo_style    custom step temp vol density press pe ke ecoul spcpu
+thermo          100
+
+fix             npt all npt temp ${Temp} ${Temp} 0.5 iso ${Press} ${Press} 5.0
+
+dump            dumpBatch_full all custom 500000 relax_traj.lammpstrj id type xu yu zu vx vy vz
+
+run             ${runtime} upto
+
+unfix           npt
+
+write_data      relaxed.data nofix nocoeff
+
