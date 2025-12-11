@@ -1,12 +1,15 @@
 # Neutral equilibration and partial relaxation of compleximer system at T = 0.8
 
+variable        T equal 0.8
+variable        type string 'COM'
+
 units           lj
 atom_style      full
 dimension       3
 boundary        p p p
 timestep        0.005
 
-read_data       start.data
+read_data       start_${type}.data
 
 
 bond_style      fene
@@ -14,7 +17,7 @@ bond_coeff      * 30.0 1.5 1.0 1.0
 special_bonds   fene
 
 variable        runtime equal 100000
-variable        Temp equal 0.8
+variable        Temp equal ${T}
 variable        PressH equal 1.0
 variable        Press equal 0.1
 variable        velSeed equal 926458
@@ -43,7 +46,7 @@ reset_timestep  0
 
 ###########################################################################
 # Repulsive LJ neutral relaxation
-######################################################################
+###########################################################################
 
 pair_style      lj/cut 1.12246
 pair_coeff      * * 1.0 1.0  1.12246
@@ -59,7 +62,7 @@ unfix           npt1
 
 ###########################################################################
 # Full LJ neutral relaxation
-######################################################################
+###########################################################################
 
 pair_style      lj/cut 2.5
 pair_coeff      * * 1.0 1.0
@@ -75,5 +78,5 @@ unfix           noDrift
 undump          mydumpEqui
 
 reset_timestep  0
-write_data      equilibrated.data  nofix nocoeff
+write_data      equilibrated_${T}.data  nofix nocoeff
 
