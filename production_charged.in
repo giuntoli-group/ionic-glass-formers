@@ -1,5 +1,7 @@
 # LAMMPS script for the production run of compleximers for charge density > 0  at T = 0.8
 
+variable        T equal 0.8
+
 units           lj
 atom_style      full
 dimension       3
@@ -9,7 +11,7 @@ neigh_modify    one 5000 every 1
 package         omp 2
 kspace_style    pppm 1.0e-4
 
-read_data       relaxed.data
+read_data       relaxed_${T}.data
 
 set             type 2 charge 1.0
 set             type 3 charge -1.0
@@ -23,7 +25,7 @@ pair_coeff      * * 1.0 1.0
 dielectric      0.1
 
 variable        runtime equal 6000000
-variable        Temp equal 0.8
+variable        Temp equal ${T}
 variable        Press equal 0.1
 variable        velSeed equal 926458
 
@@ -35,6 +37,7 @@ thermo          100
 
 fix             npt all npt temp ${Temp} ${Temp} 0.5 iso ${Press} ${Press} 5.0
 
+
 # input a file containing the timesteps where
 # the trajectory should be written
 variable        f file ${timesteps_file}
@@ -44,8 +47,6 @@ dump_modify     dumpBatch_full every v_step2 first yes
 dump_modify     dumpBatch_full sort id
 
 run             ${runtime}
-
-unfix           npt
 
 write_data      final_${T}.data nofix nocoeff
 
